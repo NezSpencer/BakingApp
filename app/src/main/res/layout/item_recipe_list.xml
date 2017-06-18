@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_marginLeft="@dimen/left_right_margin"
+              android:layout_marginRight="@dimen/left_right_margin"
+              android:layout_marginStart="@dimen/left_right_margin"
+              android:layout_marginEnd="@dimen/left_right_margin"
+              android:layout_marginTop="@dimen/top_bottom_margin"
+              android:layout_marginBottom="@dimen/top_bottom_margin"
+              xmlns:tools="http://schemas.android.com/tools"
+
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <ImageView android:layout_width="match_parent"
+               android:id="@+id/iv_recipe"
+               android:layout_height="@dimen/recipe_height"/>
+    <TextView
+            android:id="@+id/tv_recipe_name"
+            android:layout_width="match_parent"
+            android:textSize="@dimen/medium_text"
+            tools:text="Nutella pie"
+            android:textStyle="bold"
+            android:gravity="center_horizontal"
+            android:layout_height="wrap_content"/>
+
+</LinearLayout>
