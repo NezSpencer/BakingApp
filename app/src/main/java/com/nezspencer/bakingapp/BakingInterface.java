@@ -21,7 +21,5 @@ public interface BakingInterface {
         void  hideLoadingProgress();
 
         void showError(@StringRes int errormsg);
-
-        void onRecipeItemClicked(int position);
     }
 }

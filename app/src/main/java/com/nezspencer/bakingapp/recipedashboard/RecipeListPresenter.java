@@ -63,6 +63,7 @@ public class RecipeListPresenter {
     }
 
     public void fetchRecipe(){
+        recipeContract.showLoadingProgress();
         Call<String> recipeCall = Injector.provideRetrofit().create(BakingApi.class).getRecipe();
             recipeCall.enqueue(new Callback<String>() {
                 @Override

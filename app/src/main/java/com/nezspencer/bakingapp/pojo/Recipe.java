@@ -1,37 +1,71 @@
 package com.nezspencer.bakingapp.pojo;
 
-import java.util.ArrayList;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-/**
- * Created by nezspencer on 6/7/17.
- */
+public class Recipe implements Parcelable {
+    public static final Creator<Recipe> CREATOR = new Creator<Recipe>() {
+        @Override
+        public Recipe createFromParcel(Parcel source) {
+            Recipe var = new Recipe();
+            var.image = source.readString();
+            var.servings = source.readInt();
+            var.name = source.readString();
+            var.ingredients = source.createTypedArray(RecipeIngredients.CREATOR);
+            var.id = source.readInt();
+            var.steps = source.createTypedArray(RecipeSteps.CREATOR);
+            return var;
+        }
 
-public class Recipe {
-    private int id;
-
-    public int getId() { return this.id; }
-
-    public void setId(int id) { this.id = id; }
-
-    private String name;
-
-    public String getName() { return this.name; }
-
-
-    private ArrayList<Ingredient> ingredients;
-
-    public ArrayList<Ingredient> getIngredients() { return this.ingredients; }
-
-    private ArrayList<Step> steps;
-
-    public ArrayList<Step> getSteps() { return this.steps; }
-
-    private int servings;
-
-    public int getServings() { return this.servings; }
-
+        @Override
+        public Recipe[] newArray(int size) {
+            return new Recipe[size];
+        }
+    };
     private String image;
+    private int servings;
+    private String name;
+    private RecipeIngredients[] ingredients;
+    private int id;
+    private RecipeSteps[] steps;
 
-    public String getImage() { return this.image; }
+    public String getImage() {
+        return this.image;
+    }
 
+    public int getServings() {
+        return this.servings;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public RecipeIngredients[] getIngredients() {
+        return this.ingredients;
+    }
+
+    public int getId() {
+        return this.id;
+    }
+
+    public RecipeSteps[] getSteps() {
+        return this.steps;
+    }
+
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.image);
+        dest.writeInt(this.servings);
+        dest.writeString(this.name);
+        dest.writeTypedArray(this.ingredients, flags);
+        dest.writeInt(this.id);
+        dest.writeTypedArray(this.steps, flags);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
 }
