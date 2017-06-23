@@ -3,6 +3,8 @@ package com.nezspencer.bakingapp.recipeitem;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
@@ -43,6 +45,7 @@ public class IngredientStepAdapter extends RecyclerView.Adapter<IngredientStepAd
     private List<RecipeIngredients> ingredients;
     private Context context;
     private SimpleExoPlayer player;
+    private boolean shouldShowText;
 
     public IngredientStepAdapter(Context context, List<RecipeSteps> steps) {
         this.context = context;
@@ -66,7 +69,7 @@ public class IngredientStepAdapter extends RecyclerView.Adapter<IngredientStepAd
     }
 
     @Override
-    public void onBindViewHolder(MyHolder holder, int position) {
+    public void onBindViewHolder(final MyHolder holder, int position) {
 
         RecipeSteps step;
         RecipeIngredients ingredient;
@@ -76,12 +79,32 @@ public class IngredientStepAdapter extends RecyclerView.Adapter<IngredientStepAd
             Log.e("LOGGER","size is "+steps.size());
 
             String videoUrl = step.getVideoURL();
-            holder.textView.setText(step.getDescription());
+
+
             if (TextUtils.isEmpty(videoUrl)){
-                holder.playerView.setVisibility(View.GONE);
+                holder.showOnlyText();
+                if (holder.fabToggle != null)
+                    holder.textViewNoVid.setText(step.getDescription());
+                else
+                    holder.textView.setText(step.getDescription());
+
             }
             else {
-                holder.playerView.setVisibility(View.VISIBLE);
+                holder.showVideoWithText();
+                if (holder.fabToggle != null){
+                    holder.textView.setText(step.getDescription());
+                    holder.fabToggle.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            shouldShowText = !shouldShowText;
+                            holder.describeCard.setVisibility(shouldShowText?View.VISIBLE: View.INVISIBLE);
+                        }
+                    });
+                }
+                else {
+                    holder.textView.setText(step.getDescription());
+                }
+
                 BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
                 TrackSelection.Factory videoTrackSelectorFactory = new AdaptiveTrackSelection.Factory
                         (bandwidthMeter);
@@ -107,11 +130,12 @@ public class IngredientStepAdapter extends RecyclerView.Adapter<IngredientStepAd
         }
         else {
             Log.e("LOGGER","size is "+ingredients.size());
-            ingredient = (RecipeIngredients) ingredients.get(position);
+            ingredient = ingredients.get(position);
             String ingredientString =""+ingredient.getQuantity()+" "+ingredient.getMeasure()+
                     " of "+ingredient.getIngredient();
             holder.textView.setText(ingredientString);
             holder.playerView.setVisibility(View.GONE);
+            holder.playerCard.setVisibility(View.GONE);
 
         }
 
@@ -125,12 +149,40 @@ public class IngredientStepAdapter extends RecyclerView.Adapter<IngredientStepAd
 
     static final class MyHolder extends RecyclerView.ViewHolder{
         TextView textView;
+        CardView playerCard;
         SimpleExoPlayerView playerView;
+        CardView describeCard;
+        FloatingActionButton fabToggle;
+        TextView textViewNoVid;
+        CardView describeCardNoVid;
 
         public MyHolder(View itemView) {
             super(itemView);
+            playerCard = (CardView) itemView.findViewById(R.id.card_playerview);
             textView = (TextView) itemView.findViewById(R.id.tv_recipe_text_item);
             playerView = (SimpleExoPlayerView) itemView.findViewById(R.id.vid_player);
+            describeCard = (CardView) itemView.findViewById(R.id.card_text);
+            describeCardNoVid = (CardView) itemView.findViewById(R.id.card_text_no_vid);
+            fabToggle = (FloatingActionButton) itemView.findViewById(R.id.fab_toggle_text);
+            textViewNoVid = (TextView) itemView.findViewById(R.id.tv_recipe_text_item_no_vid);
+        }
+
+        void showVideoWithText(){
+            playerCard.setVisibility(View.VISIBLE);
+            textView.setVisibility(View.VISIBLE);
+            if (fabToggle != null){
+                describeCard.setVisibility(View.GONE);
+                describeCardNoVid.setVisibility(View.GONE);
+            }
+        }
+
+        void showOnlyText(){
+            playerCard.setVisibility(View.GONE);
+            if (fabToggle != null){
+                fabToggle.setVisibility(View.GONE);
+                describeCard.setVisibility(View.GONE);
+                describeCardNoVid.setVisibility(View.VISIBLE);
+            }
         }
     }
 

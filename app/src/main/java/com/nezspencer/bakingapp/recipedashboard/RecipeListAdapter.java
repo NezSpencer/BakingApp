@@ -20,7 +20,7 @@ public class RecipeListAdapter extends RecyclerView.Adapter<RecipeListAdapter.Re
     private RecipeClickListener listener;
 
     public interface RecipeClickListener {
-        void onRecipeClicked(Recipe recipe);
+        void onRecipeClicked(Recipe recipe, int position);
     }
 
     int[] recipeImages = {
@@ -50,7 +50,7 @@ public class RecipeListAdapter extends RecyclerView.Adapter<RecipeListAdapter.Re
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                listener.onRecipeClicked(recipe);
+                listener.onRecipeClicked(recipe,position);
             }
         });
 

@@ -17,17 +17,32 @@
                 android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
         <activity
-                android:launchMode="singleTop"
-                android:name=".recipeitem.RecipeItemActivity">
+                android:name=".recipeitem.RecipeItemActivity"
+                android:launchMode="singleTop">
         </activity>
+        <activity
+                android:name=".recipeitem.RecipeDetailActivity"
+                android:launchMode="singleTop"/>
 
-        <activity android:name=".recipeitem.RecipeDetailActivity"
-                  android:launchMode="singleTop"/>
+        <receiver android:name=".widget.RecipeWidget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+
+            <meta-data
+                    android:name="android.appwidget.provider"
+                    android:resource="@xml/recipe_widget_info"/>
+        </receiver>
+
+        <service
+                android:name=".widget.RecipeWidgetUpdateService"
+                android:exported="true">
+        </service>
     </application>
 
 </manifest>

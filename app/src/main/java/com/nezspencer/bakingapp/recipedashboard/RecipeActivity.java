@@ -2,6 +2,7 @@ package com.nezspencer.bakingapp.recipedashboard;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.annotation.StringRes;
 import android.support.v7.app.AppCompatActivity;
@@ -12,7 +13,6 @@ import com.nezspencer.bakingapp.AppClass;
 import com.nezspencer.bakingapp.BakingInterface;
 import com.nezspencer.bakingapp.R;
 import com.nezspencer.bakingapp.pojo.Recipe;
-import com.nezspencer.bakingapp.pojo.RecipeSteps;
 import com.nezspencer.bakingapp.recipeitem.RecipeItemActivity;
 
 import java.util.ArrayList;
@@ -63,13 +63,20 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
 
     @Override
     public void showLoadingProgress() {
-        if (!progressDialog.isShowing())
+        if (progressDialog!=null && !progressDialog.isShowing())
         progressDialog.show();
+    }
+
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
     }
 
     @Override
     public void hideLoadingProgress() {
-        if (progressDialog.isShowing())
+        if (progressDialog != null && progressDialog.isShowing())
             progressDialog.dismiss();
     }
 
@@ -79,20 +86,17 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
     }
 
     @Override
-    public void onRecipeClicked(Recipe recipe) {
-        AppClass.appItemList.clear();
+    public void onRecipeClicked(Recipe recipe,int position) {
 
-        for (int i=0; i<=recipe.getSteps().length; i++)
-            if (i==0)
-                AppClass.appItemList.add("Recipe Ingredients");
-            else{
-                RecipeSteps step = recipe.getSteps()[i-1];
-                AppClass.appItemList.add(step.getShortDescription());
-            }
-
-        AppClass.selectedRecipe = recipe;
         Intent intent = new Intent(RecipeActivity.this,RecipeItemActivity.class);
-        intent.putExtra(KEY_PARCELABLE,recipe);
+        intent.putExtra(KEY_PARCELABLE,position);
+        AppClass.selectedRecipe = recipe;
         startActivity(intent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        hideLoadingProgress();
     }
 }

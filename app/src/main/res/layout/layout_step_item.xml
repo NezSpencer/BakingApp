@@ -10,7 +10,6 @@
             android:layout_width="wrap_content"
             android:textStyle="bold"
             android:textSize="@dimen/normal_text"
-            android:layout_marginBottom="@dimen/inter_view_margin"
             android:layout_height="wrap_content"/>
 
 </LinearLayout>

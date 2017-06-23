@@ -1,10 +1,15 @@
 package com.nezspencer.bakingapp.recipeitem;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
+import com.nezspencer.bakingapp.AppClass;
 import com.nezspencer.bakingapp.R;
+import com.nezspencer.bakingapp.pojo.Recipe;
+import com.nezspencer.bakingapp.pojo.RecipeSteps;
+import com.nezspencer.bakingapp.recipedashboard.RecipeActivity;
 
 public class RecipeItemActivity extends AppCompatActivity implements RecipeItemListFragment.OnRecipeItemClickListener{
 
@@ -14,6 +19,24 @@ public class RecipeItemActivity extends AppCompatActivity implements RecipeItemL
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recipe_item);
+
+        if (getIntent().hasExtra(RecipeActivity.KEY_PARCELABLE)){
+            int recipePosition = getIntent().getIntExtra(RecipeActivity.KEY_PARCELABLE,0        );
+            AppClass.appItemList.clear();
+
+            Recipe recipe = AppClass.appRecipeList.get(recipePosition);
+
+
+            for (int i=0; i<=recipe.getSteps().length; i++)
+                if (i==0)
+                    AppClass.appItemList.add("Recipe Ingredients");
+                else{
+                    RecipeSteps step = recipe.getSteps()[i-1];
+                    Log.e("LOGGER"," "+(step==null));
+                    AppClass.appItemList.add(step.getShortDescription());
+                }
+        }
+
 
         if(findViewById(R.id.frame_recipe_item_detail) == null){
             //phone view

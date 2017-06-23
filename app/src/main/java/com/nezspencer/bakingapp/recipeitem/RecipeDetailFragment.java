@@ -64,7 +64,7 @@ public class RecipeDetailFragment extends Fragment {
 
         else {
             List<RecipeSteps> steps = Arrays.asList(AppClass.selectedRecipe.getSteps()
-                    [itemPosition]);
+                    [itemPosition-1]);
 
             adapter = new IngredientStepAdapter(getActivity(),steps);
         }
