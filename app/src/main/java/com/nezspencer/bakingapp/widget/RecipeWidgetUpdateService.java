@@ -5,24 +5,23 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.os.Handler;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.nezspencer.bakingapp.AppClass;
-import com.nezspencer.bakingapp.DI.Injector;
-import com.nezspencer.bakingapp.R;
-import com.nezspencer.bakingapp.api.BakingApi;
+import com.nezspencer.bakingapp.database.RecipeContract;
 import com.nezspencer.bakingapp.pojo.Recipe;
+import com.nezspencer.bakingapp.pojo.RecipeIngredients;
+import com.nezspencer.bakingapp.pojo.RecipeSteps;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.util.List;
 
 
 public class RecipeWidgetUpdateService extends IntentService {
@@ -31,7 +30,7 @@ public class RecipeWidgetUpdateService extends IntentService {
     private static final String ACTION_CHANGE_IMAGE = "com.nezspencer.bakingapp.widget.action" +
             ".changeimage";
 
-    int[] recipeImages = {
+    /*int[] recipeImages = {
             R.drawable.nutella2_app,
             R.drawable.brownie1_app,
             R.drawable.yellowcake1_app,
@@ -40,7 +39,7 @@ public class RecipeWidgetUpdateService extends IntentService {
             R.drawable.brownie2_app,
             R.drawable.yellowcake2_app,
             R.drawable.cheesecake2_app
-    };
+    };*/
 
 
 
@@ -57,10 +56,9 @@ public class RecipeWidgetUpdateService extends IntentService {
      *
      * @see IntentService
      */
-    public static void startActionChangeImage(Context context, int currentImagePosition) {
+    public static void startActionChangeImage(Context context) {
         Intent intent = new Intent(context, RecipeWidgetUpdateService.class);
         intent.setAction(ACTION_CHANGE_IMAGE);
-        intent.putExtra(EXTRA_SWAP, currentImagePosition);
         context.startService(intent);
     }
 
@@ -70,55 +68,38 @@ public class RecipeWidgetUpdateService extends IntentService {
         if (intent != null) {
             final String action = intent.getAction();
             if (ACTION_CHANGE_IMAGE.equals(action)) {
-                int imagePosition = intent.getIntExtra(EXTRA_SWAP,0);
-                fetchRecipe(imagePosition);
+
+                Handler handler = new Handler();
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        fetchRecipeFromDb();
+                    }
+                });
+
             }         }
     }
 
-    /**
-     * Handle action Foo in the provided background thread with the provided
-     * parameters.
-     */
-    private void swapRecipe(int currentImageId,int recipePosition) {
 
-        int imageId = currentImageId;
-        if (currentImageId >=0 && currentImageId < (recipeImages.length -1)) {
-            imageId++;
-        }
-        else
-            imageId = 0;
-        AppWidgetManager widgetManager = AppWidgetManager.getInstance(this);
-        int[] appWidgetIds = widgetManager.getAppWidgetIds(new ComponentName(this,RecipeWidget
-                .class));
+    /*private void fetchRecipe(){
 
-        RecipeWidget.updateRecipeWidget(this,widgetManager,recipeImages[imageId],recipePosition,
-                appWidgetIds, imageId);
-        Log.e("LOGGER"," service is done!");
-    }
+        Injector.provideRetrofit().create(BakingApi.class)
+                .getRecipe().enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                changeToRecipeList(response.body());
+            }
 
-    private void fetchRecipe(final int position){
-        //if there is data already on the list, dont fetch new one from network
-        if (AppClass.appRecipeList.size() > 0)
-            getImageAndTitle(position);
-        else {
-            //no data in list fetch new one
-            Injector.provideRetrofit().create(BakingApi.class)
-                    .getRecipe().enqueue(new Callback<String>() {
-                @Override
-                public void onResponse(Call<String> call, Response<String> response) {
-                    changeToRecipeList(response.body(), position);
-                }
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
 
-                @Override
-                public void onFailure(Call<String> call, Throwable t) {
+            }
+        });
 
-                }
-            });
-        }
 
-    }
+    }*/
 
-    void changeToRecipeList(String recipeString, int position) {
+    void changeToRecipeList(String recipeString) {
 
         ArrayList<Recipe> recipeArrayList = new ArrayList<>();
         try {
@@ -131,23 +112,97 @@ public class RecipeWidgetUpdateService extends IntentService {
                 recipeArrayList.add(recipe);
             }
             AppClass.appRecipeList = recipeArrayList;
-            getImageAndTitle(position);
+            deliverRecipeList(recipeArrayList);
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    void getImageAndTitle(int position){
+    void deliverRecipeList(List<Recipe> recipeList){
+        AppWidgetManager widgetManager = AppWidgetManager.getInstance(this);
+        int[] appWidgetIds = widgetManager.getAppWidgetIds(new ComponentName(this,RecipeWidget
+                .class));
 
-        if (AppClass.appRecipeList != null && AppClass.appRecipeList.size()>0 ){
+        RecipeWidget.updateRecipeWidget(this,widgetManager,appWidgetIds,recipeList);
+        Log.e("LOGGER"," service is done!");
+    }
 
-            if (position >= AppClass.appRecipeList.size()){
-                swapRecipe(position, position-AppClass.appRecipeList.size());
+    void fetchRecipeFromDb(){
+
+        List<Recipe> list = new ArrayList<>();
+        List<RecipeSteps> stepList = new ArrayList<>();
+        List<RecipeIngredients> ingredientList = new ArrayList<>();
+        int count =0;
+        Cursor cursor = getContentResolver().query(RecipeContract.TableRecipe.CONTENT_URI,
+                null,null,null, RecipeContract.TableRecipe.SORT_ORDER_DEFAULT);
+
+        while (cursor != null && cursor.moveToNext()){
+
+            String name = cursor.getString(cursor.getColumnIndex(RecipeContract.TableRecipe
+                    .COLUMN_NAME));
+
+            String stepSelect = RecipeContract.TableStep.COLUMN_NAME+"=?";
+            String[] stepArg ={name};
+            Cursor cursorStep = getContentResolver().query(
+                    RecipeContract.TableStep.CONTENT_URI,
+                    null,stepSelect,stepArg, RecipeContract.TableStep.SORT_ORDER_DEFAULT);
+
+            while (cursorStep != null && cursorStep.moveToNext()){
+                String vidUrl = cursorStep.getString(cursorStep.getColumnIndex(RecipeContract
+                        .TableStep.COLUMN_VIDEOURL));
+                String shortDesc = cursorStep.getString(cursorStep.getColumnIndex(RecipeContract
+                        .TableStep.COLUMN_SHORTDESC));
+                String desc = cursorStep.getString(cursorStep.getColumnIndex(RecipeContract
+                        .TableStep.COLUMN_DESC));
+                RecipeSteps steps = new RecipeSteps();
+                steps.setVideoURL(vidUrl);
+                steps.setShortDescription(shortDesc);
+                steps.setDescription(desc);
+                stepList.add(steps);
             }
-            else
-                swapRecipe(position, position);
 
+            if (cursorStep != null)
+                cursorStep.close();
+
+            String ingredSelect = RecipeContract.TableIngredient.COLUMN_NAME+"=?";
+            String[] ingredArg ={name};
+            Cursor ingredCursor = getContentResolver().query(RecipeContract.TableIngredient
+                    .CONTENT_URI,null,ingredSelect,ingredArg, RecipeContract.TableIngredient
+                    .SORT_ORDER_DEFAULT);
+
+            while (ingredCursor != null && ingredCursor.moveToNext()){
+
+                String measure = ingredCursor.getString(ingredCursor.getColumnIndex
+                        (RecipeContract.TableIngredient.COLUMN_MEASURE));
+                double quantity = ingredCursor.getDouble(ingredCursor.getColumnIndex
+                        (RecipeContract.TableIngredient.COLUMN_QUANTITY));
+                String ingred = ingredCursor.getString(ingredCursor.getColumnIndex(RecipeContract
+                        .TableIngredient.COLUMN_INGREDIENT));
+
+                RecipeIngredients ingredient = new RecipeIngredients();
+
+                ingredient.setIngredient(ingred);
+                ingredient.setMeasure(measure);
+                ingredient.setQuantity(quantity);
+
+                ingredientList.add(ingredient);
+            }
+
+            if(ingredCursor != null)
+                ingredCursor.close();
+
+            Recipe recipe = new Recipe();
+            recipe.setName(name);
+            recipe.setIngredients(ingredientList.toArray(new RecipeIngredients[ingredientList.size()]));
+            recipe.setSteps(stepList.toArray(new RecipeSteps[stepList.size()]));
+
+            list.add(recipe);
         }
+
+        if (cursor != null)
+            cursor.close();
+
+        deliverRecipeList(list);
     }
 
 

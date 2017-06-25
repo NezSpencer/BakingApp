@@ -2,8 +2,10 @@ package com.nezspencer.bakingapp.recipeitem;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
 import com.nezspencer.bakingapp.AppClass;
@@ -27,12 +29,17 @@ public class RecipeDetailActivity extends AppCompatActivity {
     @Bind(R.id.rv_recipe_detail)
     RecyclerView recyclerRecipeDetail;
 
+    @Bind(R.id.toolbar)
+    Toolbar toolbar;
+
     private IngredientStepAdapter adapter;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.fragment_recipe_detail);
+        setContentView(R.layout.activity_recipe_detail);
         ButterKnife.bind(this);
+
+        setSupportActionBar(toolbar);
 
         if (getIntent().hasExtra(RecipeItemActivity.KEY_ITEM)){
             itemPosition = getIntent().getIntExtra(RecipeItemActivity.KEY_ITEM,0);
@@ -52,6 +59,11 @@ public class RecipeDetailActivity extends AppCompatActivity {
 
             adapter = new IngredientStepAdapter(this,steps);
         }
+
+        if (getSupportActionBar() != null){
+            getSupportActionBar().setTitle(AppClass.selectedRecipe.getName());
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
         recyclerRecipeDetail.setAdapter(adapter);
     }
 
@@ -59,5 +71,12 @@ public class RecipeDetailActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         adapter.releaseExoPlayer();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+        NavUtils.navigateUpFromSameTask(this);
     }
 }

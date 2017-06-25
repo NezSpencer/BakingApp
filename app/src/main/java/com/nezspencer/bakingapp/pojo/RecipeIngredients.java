@@ -1,24 +1,7 @@
 package com.nezspencer.bakingapp.pojo;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
-public class RecipeIngredients implements Parcelable {
-    public static final Creator<RecipeIngredients> CREATOR = new Creator<RecipeIngredients>() {
-        @Override
-        public RecipeIngredients createFromParcel(Parcel source) {
-            RecipeIngredients var = new RecipeIngredients();
-            var.quantity = source.readInt();
-            var.measure = source.readString();
-            var.ingredient = source.readString();
-            return var;
-        }
-
-        @Override
-        public RecipeIngredients[] newArray(int size) {
-            return new RecipeIngredients[size];
-        }
-    };
+public class RecipeIngredients implements java.io.Serializable {
+    private static final long serialVersionUID = -4161157190999415102L;
     private double quantity;
     private String measure;
     private String ingredient;
@@ -27,7 +10,7 @@ public class RecipeIngredients implements Parcelable {
         return this.quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(double quantity) {
         this.quantity = quantity;
     }
 
@@ -45,17 +28,5 @@ public class RecipeIngredients implements Parcelable {
 
     public void setIngredient(String ingredient) {
         this.ingredient = ingredient;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeDouble(this.quantity);
-        dest.writeString(this.measure);
-        dest.writeString(this.ingredient);
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
     }
 }

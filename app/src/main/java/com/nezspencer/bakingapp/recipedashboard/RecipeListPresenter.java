@@ -59,7 +59,7 @@ public class RecipeListPresenter {
 
     public void onRequestCompleted(ArrayList<Recipe> recipeList){
 
-        recipeContract.hideLoadingProgress();
+
         recipeContract.setRecipeList(recipeList);
     }
 

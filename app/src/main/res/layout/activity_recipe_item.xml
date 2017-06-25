@@ -5,11 +5,17 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="@dimen/inter_block_margin"
         tools:context="com.nezspencer.bakingapp.recipeitem.RecipeItemActivity">
+    <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:minHeight="?attr/actionBarSize"
+            android:layout_width="match_parent"
+            android:background="?attr/colorPrimary"
+            android:layout_height="wrap_content"/>
 
     <fragment
         android:id="@+id/frag_recipe_item_list"
+        android:layout_marginTop="?attr/actionBarSize"
         android:name="com.nezspencer.bakingapp.recipeitem.RecipeItemListFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>

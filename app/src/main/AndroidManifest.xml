@@ -23,11 +23,19 @@
         </activity>
         <activity
                 android:name=".recipeitem.RecipeItemActivity"
+                android:parentActivityName=".recipedashboard.RecipeActivity"
                 android:launchMode="singleTop">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                       android:value=".recipedashboard.RecipeActivity"/>
         </activity>
         <activity
                 android:name=".recipeitem.RecipeDetailActivity"
-                android:launchMode="singleTop"/>
+                android:parentActivityName=".recipeitem.RecipeItemActivity"
+                android:launchMode="singleTop">
+
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                       android:value=".recipeitem.RecipeItemActivity"/>
+        </activity>
 
         <receiver android:name=".widget.RecipeWidget">
             <intent-filter>
@@ -43,6 +51,10 @@
                 android:name=".widget.RecipeWidgetUpdateService"
                 android:exported="true">
         </service>
+
+        <provider android:authorities="com.nezspencer.bakingapp"
+                  android:name=".database.RecipeProvider"
+                  android:exported="false"/>
     </application>
 
 </manifest>
