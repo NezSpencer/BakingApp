@@ -6,7 +6,11 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
+import android.support.annotation.VisibleForTesting;
+import android.support.test.espresso.IdlingResource;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -34,6 +38,7 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
         .RecipeActivityContract, RecipeListAdapter.RecipeClickListener, LoaderManager
         .LoaderCallbacks<List<Recipe>> {
 
+    @Nullable private SimpleIdlingResource idlingResource;
 
     @Bind(R.id.recipe_recycler)
     RecyclerView recipeRecycler;
@@ -47,6 +52,7 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
     private ProgressDialog progressDialog;
     public static final String KEY_POSITION ="data position";
     public static final String KEY_WIDGET = "from widget";
+    public static final String KEY_IS_PROGRESS_SHOWING =" progress showing";
 
     public static final int DB_LOADER = 123;
     public static final String DB_SAVE =" save data";
@@ -76,28 +82,29 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
 
         presenter = new RecipeListPresenter(this);
         presenter.fetchRecipe();
+
+        if (idlingResource != null)
+            idlingResource.setmIdleNow(false);
     }
 
     @Override
     public void setRecipeList(ArrayList<Recipe> recipeList1) {
         recipeList.clear();
         recipeList.addAll(recipeList1);
-        /*recipeListAdapter.notifyDataSetChanged();*/
 
-        Bundle bundle = new Bundle();
-        bundle.putString(DB_SAVE," saving");
-        LoaderManager loaderManager = getSupportLoaderManager();
-        Loader<String> dbLoader = loaderManager.getLoader(DB_LOADER);
-        if (dbLoader == null)
-            loaderManager.initLoader(DB_LOADER,bundle,RecipeActivity.this);
-        else
-            loaderManager.restartLoader(DB_LOADER,bundle,this);
+        initializeLoader();
     }
 
     @Override
     public void showLoadingProgress() {
         if (progressDialog!=null && !progressDialog.isShowing())
-        progressDialog.show();
+        {
+            progressDialog.show();
+            PreferenceManager.getDefaultSharedPreferences(this)
+                    .edit().putBoolean(KEY_IS_PROGRESS_SHOWING,true)
+                    .apply();
+        }
+
     }
 
 
@@ -105,17 +112,31 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
+        boolean isProgressShowing = PreferenceManager.getDefaultSharedPreferences(this)
+                .getBoolean(KEY_IS_PROGRESS_SHOWING,false);
+        if (isProgressShowing)
+            showLoadingProgress();
+
     }
 
     @Override
     public void hideLoadingProgress() {
-        if (progressDialog != null && progressDialog.isShowing())
+        if (progressDialog != null && progressDialog.isShowing()){
             progressDialog.dismiss();
+
+            PreferenceManager.getDefaultSharedPreferences(this)
+                    .edit().putBoolean(KEY_IS_PROGRESS_SHOWING,true)
+                    .apply();
+        }
+
+
     }
 
     @Override
     public void showError(@StringRes int errormsg) {
         Toast.makeText(this,errormsg,Toast.LENGTH_SHORT).show();
+        initializeLoader();
+
     }
 
     @Override
@@ -134,52 +155,56 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
     }
 
     public void saveToDB(){
+        if (recipeList != null && recipeList.size()> 0){
+            getContentResolver().delete(RecipeContract.TableRecipe.CONTENT_URI,
+                    null,null);
+            getContentResolver().delete(RecipeContract.TableStep.CONTENT_URI,
+                    null,null);
+            getContentResolver().delete(RecipeContract.TableIngredient.CONTENT_URI,
+                    null,null);
 
-        getContentResolver().delete(RecipeContract.TableRecipe.CONTENT_URI,
-                null,null);
-        getContentResolver().delete(RecipeContract.TableStep.CONTENT_URI,
-                null,null);
-        getContentResolver().delete(RecipeContract.TableIngredient.CONTENT_URI,
-                null,null);
+            for (int i =0; i <recipeList.size(); i++){
+                Recipe recipe = recipeList.get(i);
+                ContentValues recipeValue = new ContentValues();
+                ContentValues[] stepValues = new ContentValues[recipe.getSteps().length];
+                ContentValues [] ingredientValues = new ContentValues[recipe.getIngredients().length];
 
+                recipeValue.put(RecipeContract.TableRecipe.COLUMN_NAME,recipe.getName());
 
-        for (int i =0; i <recipeList.size(); i++){
-            Recipe recipe = recipeList.get(i);
-            ContentValues recipeValue = new ContentValues();
-            ContentValues[] stepValues = new ContentValues[recipe.getSteps().length];
-            ContentValues [] ingredientValues = new ContentValues[recipe.getIngredients().length];
+                for (int j=0; j < recipe.getSteps().length; j++){
+                    RecipeSteps step = recipe.getSteps()[j];
+                    ContentValues stepValue = new ContentValues();
+                    stepValue.put(RecipeContract.TableStep.COLUMN_NAME,recipe.getName());
+                    stepValue.put(RecipeContract.TableStep.COLUMN_VIDEOURL,step.getVideoURL());
+                    stepValue.put(RecipeContract.TableStep.COLUMN_SHORTDESC,step.getShortDescription());
+                    stepValue.put(RecipeContract.TableStep.COLUMN_DESC,step.getDescription());
 
-            recipeValue.put(RecipeContract.TableRecipe.COLUMN_NAME,recipe.getName());
+                    stepValues[j] = stepValue;
+                }
 
-            for (int j=0; j < recipe.getSteps().length; j++){
-                RecipeSteps step = recipe.getSteps()[j];
-                ContentValues stepValue = new ContentValues();
-                stepValue.put(RecipeContract.TableStep.COLUMN_NAME,recipe.getName());
-                stepValue.put(RecipeContract.TableStep.COLUMN_VIDEOURL,step.getVideoURL());
-                stepValue.put(RecipeContract.TableStep.COLUMN_SHORTDESC,step.getShortDescription());
-                stepValue.put(RecipeContract.TableStep.COLUMN_DESC,step.getDescription());
+                for (int j =0; j < recipe.getIngredients().length; j++){
+                    RecipeIngredients ingredient = recipe.getIngredients()[j];
+                    ContentValues ingredientVal = new ContentValues();
+                    ingredientVal.put(RecipeContract.TableIngredient.COLUMN_NAME,recipe.getName());
+                    ingredientVal.put(RecipeContract.TableIngredient.COLUMN_MEASURE,ingredient.getMeasure());
+                    ingredientVal.put(RecipeContract.TableIngredient.COLUMN_QUANTITY,ingredient.getQuantity());
+                    ingredientVal.put(RecipeContract.TableIngredient.COLUMN_INGREDIENT,ingredient.getIngredient());
 
-                stepValues[j] = stepValue;
+                    ingredientValues[j] = ingredientVal;
+                }
+
+                //insert all to db
+
+                getContentResolver().insert(RecipeContract.TableRecipe.CONTENT_URI,recipeValue);
+                getContentResolver().bulkInsert(RecipeContract.TableStep.CONTENT_URI,stepValues);
+                getContentResolver().bulkInsert(RecipeContract.TableIngredient.CONTENT_URI,
+                        ingredientValues);
             }
-
-            for (int j =0; j < recipe.getIngredients().length; j++){
-                RecipeIngredients ingredient = recipe.getIngredients()[j];
-                ContentValues ingredientVal = new ContentValues();
-                ingredientVal.put(RecipeContract.TableIngredient.COLUMN_NAME,recipe.getName());
-                ingredientVal.put(RecipeContract.TableIngredient.COLUMN_MEASURE,ingredient.getMeasure());
-                ingredientVal.put(RecipeContract.TableIngredient.COLUMN_QUANTITY,ingredient.getQuantity());
-                ingredientVal.put(RecipeContract.TableIngredient.COLUMN_INGREDIENT,ingredient.getIngredient());
-
-                ingredientValues[j] = ingredientVal;
-            }
-
-            //insert all to db
-
-            getContentResolver().insert(RecipeContract.TableRecipe.CONTENT_URI,recipeValue);
-            getContentResolver().bulkInsert(RecipeContract.TableStep.CONTENT_URI,stepValues);
-            getContentResolver().bulkInsert(RecipeContract.TableIngredient.CONTENT_URI,
-                    ingredientValues);
         }
+
+
+
+
 
 
     }
@@ -211,6 +236,9 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
         AppClass.appRecipeList.clear();
         AppClass.appRecipeList.addAll(data);
         recipeListAdapter.notifyDataSetChanged();
+
+        if (idlingResource != null)
+            idlingResource.setmIdleNow(true);
 
     }
 
@@ -297,5 +325,27 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
         return list;
 
 
+    }
+
+    public void initializeLoader(){
+        Bundle bundle = new Bundle();
+        bundle.putString(DB_SAVE," saving");
+        LoaderManager loaderManager = getSupportLoaderManager();
+        Loader<String> dbLoader = loaderManager.getLoader(DB_LOADER);
+        if (dbLoader == null)
+            loaderManager.initLoader(DB_LOADER,bundle,RecipeActivity.this);
+        else
+            loaderManager.restartLoader(DB_LOADER,bundle,this);
+    }
+
+    @VisibleForTesting
+    @Nullable
+    public IdlingResource getIdlingResource(){
+        if (idlingResource == null)
+        {
+            idlingResource = new SimpleIdlingResource();
+        }
+
+        return idlingResource;
     }
 }

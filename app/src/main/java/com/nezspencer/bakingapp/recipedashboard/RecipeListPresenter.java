@@ -54,12 +54,9 @@ public class RecipeListPresenter {
 
     public void onNetworkError(){
         recipeContract.showError(R.string.error_retry);
-        recipeContract.hideLoadingProgress();
     }
 
     public void onRequestCompleted(ArrayList<Recipe> recipeList){
-
-
         recipeContract.setRecipeList(recipeList);
     }
 

@@ -16,6 +16,7 @@
     <dimen name="left_right_margin">16dp</dimen>
     <dimen name="top_bottom_margin">16dp</dimen>
     <dimen name="text_margin">16dp</dimen>
+    <dimen name="widget_size">160dp</dimen>
 
     <!--
 Refer to App Widget Documentation for margin information
