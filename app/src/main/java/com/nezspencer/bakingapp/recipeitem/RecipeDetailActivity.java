@@ -68,8 +68,8 @@ public class RecipeDetailActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onPause() {
+        super.onPause();
         adapter.releaseExoPlayer();
     }
 

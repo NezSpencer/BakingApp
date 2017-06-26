@@ -38,6 +38,7 @@ public class RecipeContract {
         public static final String COLUMN_VIDEOURL = "videoUrl";
         public static final String COLUMN_SHORTDESC = "shortDescription";
         public static final String COLUMN_DESC ="description";
+        public static final String COLUMN_THUMBNAIL_URL = "thumbnailUrl";
 
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_STEP)
                 .build();

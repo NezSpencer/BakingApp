@@ -7,4 +7,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="appwidget_text">hello widget</string>
     <string name="add_widget">Add widget</string>
+    <string name="key_recipe_name">recipe1</string>
+    <string name="key_recipe_fault">defaultName</string>
+
 </resources>

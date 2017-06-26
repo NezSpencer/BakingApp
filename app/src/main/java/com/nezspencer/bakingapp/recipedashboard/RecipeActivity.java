@@ -145,6 +145,7 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
         Intent intent = new Intent(RecipeActivity.this,RecipeItemActivity.class);
         intent.putExtra(KEY_POSITION,position);
         AppClass.selectedRecipe = recipe;
+        saveRecipeName(recipe.getName());
         startActivity(intent);
     }
 
@@ -178,6 +179,7 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
                     stepValue.put(RecipeContract.TableStep.COLUMN_VIDEOURL,step.getVideoURL());
                     stepValue.put(RecipeContract.TableStep.COLUMN_SHORTDESC,step.getShortDescription());
                     stepValue.put(RecipeContract.TableStep.COLUMN_DESC,step.getDescription());
+                    stepValue.put(RecipeContract.TableStep.COLUMN_THUMBNAIL_URL,step.getThumbnailURL());
 
                     stepValues[j] = stepValue;
                 }
@@ -237,6 +239,9 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
         AppClass.appRecipeList.addAll(data);
         recipeListAdapter.notifyDataSetChanged();
 
+        String name = AppClass.appRecipeList.get(0).getName();
+        saveRecipeName(name);
+
         if (idlingResource != null)
             idlingResource.setmIdleNow(true);
 
@@ -252,7 +257,7 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
         List<Recipe> list = new ArrayList<>();
         List<RecipeSteps> stepList = new ArrayList<>();
         List<RecipeIngredients> ingredientList = new ArrayList<>();
-        int count =0;
+
         Cursor cursor = getContentResolver().query(RecipeContract.TableRecipe.CONTENT_URI,
                 null,null,null, RecipeContract.TableRecipe.SORT_ORDER_DEFAULT);
 
@@ -274,10 +279,14 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
                         .TableStep.COLUMN_SHORTDESC));
                 String desc = cursorStep.getString(cursorStep.getColumnIndex(RecipeContract
                         .TableStep.COLUMN_DESC));
+                String thumbUrl = cursorStep.getString(cursorStep.getColumnIndex(RecipeContract
+                        .TableStep.COLUMN_THUMBNAIL_URL));
+
                 RecipeSteps steps = new RecipeSteps();
                 steps.setVideoURL(vidUrl);
                 steps.setShortDescription(shortDesc);
                 steps.setDescription(desc);
+                steps.setThumbnailURL(thumbUrl);
                 stepList.add(steps);
             }
 
@@ -347,5 +356,10 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
         }
 
         return idlingResource;
+    }
+
+    public void saveRecipeName(String name){
+        PreferenceManager.getDefaultSharedPreferences(RecipeActivity.this)
+                .edit().putString(getString(R.string.key_recipe_name),name).apply();
     }
 }

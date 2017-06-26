@@ -26,6 +26,7 @@ public class RecipeDatabase extends SQLiteOpenHelper {
                 RecipeContract.TableStep._ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
                 RecipeContract.TableStep.COLUMN_NAME+" TEXT NOT NULL, "+
                 RecipeContract.TableStep.COLUMN_VIDEOURL+" TEXT, "+
+                RecipeContract.TableStep.COLUMN_THUMBNAIL_URL+" TEXT, "+
                 RecipeContract.TableStep.COLUMN_DESC+" TEXT NOT NULL, "+
                 RecipeContract.TableStep.COLUMN_SHORTDESC+" TEXT NOT NULL );";
 

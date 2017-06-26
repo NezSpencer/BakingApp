@@ -76,7 +76,17 @@ dependencies {
     androidTestCompile 'com.android.support.test.espresso:espresso-intents:2.2.2'
     compile 'com.android.support.test.espresso:espresso-idling-resource:2.2.2'
 
+    compile 'com.github.bumptech.glide:glide:3.7.0'
 
     compile 'com.android.support:design:25.3.1'
     debugCompile 'com.squareup.leakcanary:leakcanary-android:1.5.1'
+
+    androidTestCompile('com.android.support.test.espresso:espresso-contrib:2.2.1') {
+        // Necessary to avoid version conflicts
+        exclude group: 'com.android.support', module: 'appcompat'
+        exclude group: 'com.android.support', module: 'support-v4'
+        exclude group: 'com.android.support', module: 'support-annotations'
+        exclude module: 'recyclerview-v7'
+    }
+
 }

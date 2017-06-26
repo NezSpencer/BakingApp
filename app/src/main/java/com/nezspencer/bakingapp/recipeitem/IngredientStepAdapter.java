@@ -11,8 +11,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
@@ -79,9 +81,10 @@ public class IngredientStepAdapter extends RecyclerView.Adapter<IngredientStepAd
             Log.e("LOGGER","size is "+steps.size());
 
             String videoUrl = step.getVideoURL();
+            String thumbUrl = step.getThumbnailURL();
 
 
-            if (TextUtils.isEmpty(videoUrl)){
+            if (TextUtils.isEmpty(videoUrl) && TextUtils.isEmpty(thumbUrl)){
                 holder.showOnlyText();
                 if (holder.fabToggle != null)
                     holder.textViewNoVid.setText(step.getDescription());
@@ -90,8 +93,8 @@ public class IngredientStepAdapter extends RecyclerView.Adapter<IngredientStepAd
 
             }
             else {
-                holder.showVideoWithText();
                 if (holder.fabToggle != null){
+                    //landscape view
                     holder.textView.setText(step.getDescription());
                     holder.fabToggle.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -105,35 +108,54 @@ public class IngredientStepAdapter extends RecyclerView.Adapter<IngredientStepAd
                     holder.textView.setText(step.getDescription());
                 }
 
-                BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
-                TrackSelection.Factory videoTrackSelectorFactory = new AdaptiveTrackSelection.Factory
-                        (bandwidthMeter);
-                TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectorFactory);
+                holder.showVideoWithText();
 
-                player = ExoPlayerFactory.newSimpleInstance(context,trackSelector);
+                if (TextUtils.isEmpty(videoUrl)){
+                    holder.playerCard.setVisibility(View.GONE);
+                    holder.imageCard.setVisibility(View.VISIBLE);
+                    Glide.with(context).load(thumbUrl)
+                            .placeholder(R.mipmap.ic_launcher)
+                            .into(holder.stepImage);
 
-                holder.playerView.setPlayer(player);
+                }
+                else {
+                    holder.imageCard.setVisibility(View.GONE);
+                    holder.playerCard.setVisibility(View.VISIBLE);
 
-                DefaultBandwidthMeter meter = new DefaultBandwidthMeter();
-                DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context,
-                        Util.getUserAgent(context,context.getPackageName()),meter);
-                ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
+                    BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
+                    TrackSelection.Factory videoTrackSelectorFactory = new AdaptiveTrackSelection.Factory
+                            (bandwidthMeter);
+                    TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectorFactory);
 
-                Uri videoUri = Uri.parse(step.getVideoURL()).buildUpon().build();
-                MediaSource videoSource = new ExtractorMediaSource(videoUri,dataSourceFactory,
-                        extractorsFactory,null,null);
+                    player = ExoPlayerFactory.newSimpleInstance(context,trackSelector);
 
-                player.prepare(videoSource);
+                    holder.playerView.setPlayer(player);
 
 
+
+
+                    DefaultBandwidthMeter meter = new DefaultBandwidthMeter();
+                    DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context,
+                            Util.getUserAgent(context,context.getPackageName()),meter);
+                    ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
+
+                    Uri videoUri = Uri.parse(videoUrl).buildUpon().build();
+                    MediaSource videoSource = new ExtractorMediaSource(videoUri,dataSourceFactory,
+                            extractorsFactory,null,null);
+
+                    player.prepare(videoSource);
+                }
             }
         }
         else {
+
             Log.e("LOGGER","size is "+ingredients.size());
             ingredient = ingredients.get(position);
             String ingredientString =""+ingredient.getQuantity()+" "+ingredient.getMeasure()+
                     " of "+ingredient.getIngredient();
             holder.textView.setText(ingredientString);
+
+            holder.showOnlyText();
             holder.playerView.setVisibility(View.GONE);
             holder.playerCard.setVisibility(View.GONE);
 
@@ -155,6 +177,8 @@ public class IngredientStepAdapter extends RecyclerView.Adapter<IngredientStepAd
         FloatingActionButton fabToggle;
         TextView textViewNoVid;
         CardView describeCardNoVid;
+        CardView imageCard;
+        ImageView stepImage;
 
         public MyHolder(View itemView) {
             super(itemView);
@@ -165,10 +189,11 @@ public class IngredientStepAdapter extends RecyclerView.Adapter<IngredientStepAd
             describeCardNoVid = (CardView) itemView.findViewById(R.id.card_text_no_vid);
             fabToggle = (FloatingActionButton) itemView.findViewById(R.id.fab_toggle_text);
             textViewNoVid = (TextView) itemView.findViewById(R.id.tv_recipe_text_item_no_vid);
+            imageCard = (CardView) itemView.findViewById(R.id.card_image);
+            stepImage = (ImageView) itemView.findViewById(R.id.iv_stepImage);
         }
 
         void showVideoWithText(){
-            playerCard.setVisibility(View.VISIBLE);
             textView.setVisibility(View.VISIBLE);
             if (fabToggle != null){
                 describeCard.setVisibility(View.GONE);
@@ -178,9 +203,11 @@ public class IngredientStepAdapter extends RecyclerView.Adapter<IngredientStepAd
 
         void showOnlyText(){
             playerCard.setVisibility(View.GONE);
+            imageCard.setVisibility(View.GONE);
             if (fabToggle != null){
                 fabToggle.setVisibility(View.GONE);
                 describeCard.setVisibility(View.GONE);
+                imageCard.setVisibility(View.GONE);
                 describeCardNoVid.setVisibility(View.VISIBLE);
             }
         }
