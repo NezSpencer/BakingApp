@@ -21,6 +21,9 @@ public class SimpleIdlingResource implements IdlingResource{
 
     @Override
     public boolean isIdleNow() {
+        Boolean isIdle = mIdleNow.get();
+        if (isIdle)
+            mCallback.onTransitionToIdle();
         return mIdleNow.get();
     }
 

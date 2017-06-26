@@ -87,12 +87,16 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
         presenter = new RecipeListPresenter(this);
 
         if (isInternetAvailable())
+        {
+            if (idlingResource != null)
+                idlingResource.setmIdleNow(false);
             presenter.fetchRecipe();
+        }
+
         else
             showError(R.string.internet_error);
 
-        if (idlingResource != null)
-            idlingResource.setmIdleNow(false);
+
     }
 
     @Override
