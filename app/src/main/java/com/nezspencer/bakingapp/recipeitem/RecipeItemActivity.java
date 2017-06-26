@@ -58,15 +58,7 @@ public class RecipeItemActivity extends AppCompatActivity implements RecipeItemL
 
 
 
-        if(findViewById(R.id.frame_recipe_item_detail) == null){
-            //phone view
-            isTablet = false;
-        }
-        else {
-            //tablet view
-            isTablet = true;
-
-        }
+        isTablet = getResources().getBoolean(R.bool.isTablet);
     }
 
     @Override

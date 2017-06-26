@@ -2,14 +2,18 @@ package com.nezspencer.bakingapp.recipedashboard;
 
 import android.app.ProgressDialog;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.annotation.VisibleForTesting;
+import android.support.design.widget.Snackbar;
 import android.support.test.espresso.IdlingResource;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
@@ -81,7 +85,11 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
         progressDialog.setCancelable(false);
 
         presenter = new RecipeListPresenter(this);
-        presenter.fetchRecipe();
+
+        if (isInternetAvailable())
+            presenter.fetchRecipe();
+        else
+            showError(R.string.internet_error);
 
         if (idlingResource != null)
             idlingResource.setmIdleNow(false);
@@ -134,7 +142,9 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
 
     @Override
     public void showError(@StringRes int errormsg) {
-        Toast.makeText(this,errormsg,Toast.LENGTH_SHORT).show();
+        Snackbar.make(this.getWindow().getDecorView().getRootView(),errormsg,Snackbar.LENGTH_SHORT)
+                .show();
+
         initializeLoader();
 
     }
@@ -361,5 +371,17 @@ public class RecipeActivity extends AppCompatActivity implements BakingInterface
     public void saveRecipeName(String name){
         PreferenceManager.getDefaultSharedPreferences(RecipeActivity.this)
                 .edit().putString(getString(R.string.key_recipe_name),name).apply();
+    }
+
+    public boolean isInternetAvailable(){
+        ConnectivityManager cm =
+                (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+
+
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+
+
     }
 }
